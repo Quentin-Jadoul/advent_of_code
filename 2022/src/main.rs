@@ -13,7 +13,7 @@ mod day10;
 mod day11;
 mod day14;
 mod day15;
-mod day18;
+// mod day18;
 
 mod input;
 
@@ -36,7 +36,7 @@ fn main() {
         Day::new("Day 11", day11::day11),
         Day::new("Day 14", day14::day14),
         Day::new("Day 15", day15::day15),
-        Day::new("Day 18", day18::day18),
+        // Day::new("Day 18", day18::day18),
     ];
     for day in args.iter().skip(1) {
         match day.as_str() {
