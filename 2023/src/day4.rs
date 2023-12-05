@@ -1,5 +1,7 @@
 use regex::Regex;
 use crate:: input;
+use std::collections::HashSet;
+use std::collections::HashMap;
 
 pub fn day4() -> input::Result<()> {
     println!("Part 1: {}", part_1());
@@ -14,17 +16,7 @@ pub fn part_1() -> usize {
     let mut sum = 0;
 
     for line in content.lines() {
-        // split on the : and | characters
-        let card_content = line.split(":").nth(1).unwrap();
-        let (winning_numbers, numbers) = card_content.split_once("|").unwrap();
-
-        let re = Regex::new(r"\b\d+\b").unwrap();
-        let winning_numbers: Vec<&str> = re.captures_iter(winning_numbers)
-            .map(|cap| cap.get(0).map_or("", |m| m.as_str()))
-            .collect();
-        let numbers: Vec<&str> = re.captures_iter(numbers)
-            .map(|cap| cap.get(0).map_or("", |m| m.as_str()))
-            .collect();
+        let (_id, winning_numbers, numbers) = parse(line);
 
         let mut points = 0;
 
@@ -49,52 +41,40 @@ pub fn part_2() -> usize {
     let mut sum = 0;
 
     // Create a hashmap with the id of the card as key and the number of copy as value
-    let mut cards: std::collections::HashMap<usize, usize> = std::collections::HashMap::new();
+    let mut cards: HashMap<usize, usize> = HashMap::new();
     cards.insert(1, 1);
 
     for line in content.lines() {
-        // split on the : and | characters
-        let (id, card_content) = line.split_once(":").unwrap();
-        let (winning_numbers, numbers) = card_content.split_once("|").unwrap();
-
-        // convert id to usize and keep only the number
-        let id = id.split_whitespace().nth(1).unwrap().parse::<usize>().unwrap();
-
-        let re = Regex::new(r"\b\d+\b").unwrap();
-        let winning_numbers: Vec<&str> = re.captures_iter(winning_numbers)
-            .map(|cap| cap.get(0).map_or("", |m| m.as_str()))
-            .collect();
-        let numbers: Vec<&str> = re.captures_iter(numbers)
-            .map(|cap| cap.get(0).map_or("", |m| m.as_str()))
-            .collect();
-
+        let (id, winning_numbers, numbers) = parse(line);
+    
         let mut i = 0;
-
-        if !cards.contains_key(&id) {
-            cards.insert(id, 1);
+    
+        let value = *cards.entry(id).or_insert(1);
+        sum += value;
+        for _ in winning_numbers.intersection(&numbers) {
+            i += 1;
+            let copy_id = id + i;
+            *cards.entry(copy_id).or_insert(1) += value;
         }
-        sum += cards.get(&id).unwrap().clone();
-        for number in numbers.iter() {
-            if winning_numbers.contains(number) {
-                i += 1;
-                let copy_id = id + i;
-                let multiplicator:usize = cards.get(&id).unwrap().clone();
-                if cards.contains_key(&copy_id) {
-                    // get the number of copies
-                
-                    cards.insert(copy_id, cards.get(&copy_id).unwrap() + multiplicator);
-                } else {
-                    cards.insert(copy_id, 1 + multiplicator);
-                }
-            }
-        }
-
-        
     }
-
     sum
 }
 
-pub fn parse() {
+pub fn parse(line: &str) -> (usize, HashSet<&str>, HashSet<&str>) {
+    // split on the : and | characters
+    let (id, card_content) = line.split_once(":").unwrap();
+    let (winning_numbers, numbers) = card_content.split_once("|").unwrap();
 
+    // convert id to usize and keep only the number
+    let id = id.split_whitespace().nth(1).unwrap().parse::<usize>().unwrap();
+
+    let re = Regex::new(r"\b\d+\b").unwrap();
+    let winning_numbers: HashSet<&str> = re.captures_iter(winning_numbers)
+        .map(|cap| cap.get(0).map_or("", |m| m.as_str()))
+        .collect();
+    let numbers: HashSet<&str> = re.captures_iter(numbers)
+        .map(|cap| cap.get(0).map_or("", |m| m.as_str()))
+        .collect();
+
+    (id, winning_numbers, numbers)
 }
