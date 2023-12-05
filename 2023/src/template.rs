@@ -1,6 +1,8 @@
 use crate:: input;
 
 pub fn dayTemplate() -> input::Result<()> {
+    println!("Part 1: {}", part_1());
+    println!("Part 2: {}", part_2());
     
     Ok(())
 }
