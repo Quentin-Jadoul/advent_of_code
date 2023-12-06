@@ -1,5 +1,6 @@
 use crate:: input;
 use regex::Regex;
+use std::f64;
 
 pub fn day6() -> input::Result<()> {
     let content = input::load_day_file("day6.txt");
@@ -32,23 +33,18 @@ pub fn part_2(content: &String) -> usize {
 
 pub fn count_winning_cases(time: Vec<usize>, distance: Vec<usize>) -> usize {
     let mut total_winning_cases = 1;
+    
     for (time, &distance) in time.iter().zip(&distance) {
-        let product = (time / 2) * (time / 2 + time % 2);
-        let mut winning_cases = 0;
-        let mut i = 0;
+        let x = ((time / 2) * (time / 2 + time % 2)) as f64 - distance as f64;
+        
         if time % 2 != 0 {
-            while product - (i * (i+1)) > distance {
-                winning_cases = 2 * (i + 1);
-                i += 1;
-            } 
+            let c = -x;
+            let i: usize = ((-1.0 - f64::sqrt(1.0 - 4.0*c)) / (2.0)).abs().floor() as usize;
+            total_winning_cases *= 2 * i;
         } else {
-            while product - (i * i) > distance {
-                winning_cases = 1 + (2 * i);
-                i += 1;
-            }
-            
+            let i = (f64::sqrt(x)).ceil() as usize;
+            total_winning_cases *= (2 * i) - 1;
         }
-        total_winning_cases *= winning_cases;
     }
     total_winning_cases
 }
