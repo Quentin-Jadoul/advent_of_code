@@ -1,27 +1,17 @@
 use crate:: input;
 
-
 pub fn day9() -> input::Result<()> {
     let content = input::load_day_file("day9.txt");
 
-    println!("Part 1: {}", part_1(&content));
-    println!("Part 2: {}", part_2(&content));
+    let (part_1_sum, part_2_sum) = content.lines().map(|line| {
+        let sequence = parse_sequence(line);
+        (next_in_sequence(&sequence), prev_in_sequence(&sequence))
+    }).fold((0, 0), |(part_1_acc, part_2_acc), (part_1, part_2)| (part_1_acc + part_1, part_2_acc + part_2));
+
+    println!("Part 1: {}", part_1_sum);
+    println!("Part 2: {}", part_2_sum);
     
     Ok(())
-}
-
-pub fn part_1(content: &str) -> isize {
-    content.lines().map(|line| {
-        let sequence = parse_sequence(line);
-        next_in_sequence(&sequence)
-    }).sum()
-}
-
-pub fn part_2(content: &str) -> usize {
-    content.lines().map(|line| {
-        let sequence = parse_sequence(line);
-        prev_in_sequence(&sequence)
-    }).sum::<isize>() as usize
 }
 
 pub fn parse_sequence(line: &str) -> Vec<isize> {
