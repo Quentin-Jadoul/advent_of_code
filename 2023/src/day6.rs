@@ -3,15 +3,15 @@ use regex::Regex;
 use std::f64;
 
 pub fn day6() -> input::Result<()> {
-    let content = input::load_day_file("day6.txt");
+    let content = include_str!("../data/day6.txt");
 
-    println!("Part 1: {}", part_1(&content));
-    println!("Part 2: {}", part_2(&content));
+    println!("Part 1: {}", part_1(content));
+    println!("Part 2: {}", part_2(content));
     
     Ok(())
 }
 
-pub fn part_1(content: &String) -> usize {
+pub fn part_1(content: &str) -> usize {
     let re = Regex::new(r"\d+").unwrap();
     let lines = content.lines().collect::<Vec<_>>();
     let time: Vec<usize> = re.captures_iter(lines.get(0).unwrap())
@@ -21,30 +21,26 @@ pub fn part_1(content: &String) -> usize {
         .map(|cap| cap[0].parse::<usize>().unwrap())
         .collect();
 
-    count_winning_cases(time, distance)
+    count_winning_cases(&time, &distance)
 }
-pub fn part_2(content: &String) -> usize {
+pub fn part_2(content: &str) -> usize {
     let time: Vec<usize> = vec![content.lines().next().unwrap().split(":").nth(1).unwrap().replace(" ", "").parse().unwrap()];
 
     let distance: Vec<usize> = vec![content.lines().nth(1).unwrap().split(":").nth(1).unwrap().replace(" ", "").parse().unwrap()];
     
-    count_winning_cases(time, distance)
+    count_winning_cases(&time, &distance)
 }
 
-pub fn count_winning_cases(time: Vec<usize>, distance: Vec<usize>) -> usize {
-    let mut total_winning_cases = 1;
-    
-    for (time, &distance) in time.iter().zip(&distance) {
+pub fn count_winning_cases(time: &[usize], distance: &[usize]) -> usize {
+    time.iter().zip(distance).fold(1, |acc, (&time, &distance)| {
         let x = ((time / 2) * (time / 2 + time % 2)) as f64 - distance as f64;
-        
         if time % 2 != 0 {
             let c = -x;
-            let i: usize = ((-1.0 - f64::sqrt(1.0 - 4.0*c)) / (2.0)).abs().floor() as usize;
-            total_winning_cases *= 2 * i;
+            let i: usize = ((-1.0 - (1.0 - 4.0*c).sqrt()) / (2.0)).abs().floor() as usize;
+            acc * (2 * i)
         } else {
-            let i = (f64::sqrt(x)).ceil() as usize;
-            total_winning_cases *= (2 * i) - 1;
+            let i = ((x).sqrt()).ceil() as usize;
+            acc * ((2 * i) - 1)
         }
-    }
-    total_winning_cases
+    })
 }
