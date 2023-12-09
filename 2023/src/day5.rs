@@ -22,7 +22,7 @@ pub fn part_1() -> usize {
     let mut location: Vec<usize> = Vec::new();
     for seed in seeds.iter() {
         let mut source = *seed;
-        for (i, group) in groups.iter().enumerate().skip(1) {
+        for (_i, group) in groups.iter().enumerate().skip(1) {
             for line in group.lines().skip(1) {
                 let numbers: Vec<usize> = line.split_whitespace()
                     .filter_map(|s| s.parse().ok())
