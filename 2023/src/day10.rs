@@ -1,78 +1,48 @@
-use std::{thread, time};
-
 use crate:: input;
 
 pub fn day10() -> input::Result<()> {
-    println!("Part 1: {}", part_1());
-    println!("Part 2: {}", part_2());
-
     let content = input::load_day_file("day10.txt");
 
-    let mut start_pos = (0, 0);
-
     // Store it inside a two dimensional grid. grid[row][column]
-    let mut map = Vec::new();
-    for line in content.lines() {
-        let mut row = Vec::new();
-        for c in line.chars() {
-            row.push(c);
-        }
-        map.push(row);
-    }
-
-    // Create a map to keep track of explored cells
-    let mut explored = vec![vec![false; map[0].len()]; map.len()];
+    let map: Vec<Vec<_>> = content.lines().map(|line| line.chars().collect()).collect();
 
     // Find the starting position (column, row)
-    let mut start_pos = (0, 0);
-    for (i, row) in map.iter().enumerate() {
-        for (j, &cell) in row.iter().enumerate() {
-            if cell == 'S' {
-                start_pos = (j, i);
-                break;
-            }
-        }
-    }
+    let start_pos = map.iter().enumerate()
+        .find_map(|(i, row)| 
+            row.iter().enumerate()
+                .find(|&(_, &cell)| cell == 'S')
+                .map(|(j, _)| (j, i))
+        ).unwrap_or((0, 0));
 
-    let distance = measure_path(&map, start_pos, &mut explored);
+    let (distance, vertices) = measure_path(&map, start_pos);
 
-    display_map(&map, &explored);
+    println!("Part 1: {}", distance / 2);
 
-    println!("distance {:?}", distance);
+    // convert the vertices to f64
+    let vertices: Vec<(f64, f64)> = vertices.iter().map(|&(x, y)| (x as f64, y as f64)).collect();
 
-    // find the middle of the path
-    let middle = distance / 2;
-    println!("Part 1: {}", middle);
+    // calculate the inverse pick formula
+    let i = shoelace(&vertices) as usize - (vertices.len()/2) + 1;
+    println!("Part 2: {}", i);
 
-    
     Ok(())
 }
 
-pub fn part_1() -> usize {
-    0
-}
-pub fn part_2() -> usize {
-    0
-}
-
-pub fn measure_path(map: &Vec<Vec<char>>, start_pos: (usize, usize), explored: &mut Vec<Vec<bool>>) -> usize {
+pub fn measure_path(map: &Vec<Vec<char>>, start_pos: (usize, usize)) -> (usize, Vec<(usize, usize)>) {
     let initial_position = start_pos;
     let mut current_position = get_start_next_pos(&map, start_pos);
     let mut previous_position = start_pos;
     let mut nb_steps = 1;
+    let mut vertices = vec![start_pos];
 
     while current_position != initial_position {
         let next_pos = next_position(current_position, previous_position, &map);
         nb_steps += 1;
-
-        // Mark the current cell as explored
-        let (x, y) = current_position;
-        explored[y][x] = true;
-
+        vertices.push(current_position);
         previous_position = current_position;
         current_position = next_pos;
     }
-    nb_steps
+    (nb_steps, vertices)
 }
 
 pub fn next_position(current_position: (usize, usize), previous_position: (usize, usize), map: &Vec<Vec<char>>) -> (usize, usize) {
@@ -115,36 +85,12 @@ pub fn get_start_next_pos(map: &Vec<Vec<char>>, start_pos: (usize, usize)) -> (u
     }
 }
 
-use crossterm::{cursor, execute, style, terminal, Result};
-use std::io::{stdout, Write};
-
-fn display_map(map: &Vec<Vec<char>>, explored: &Vec<Vec<bool>>) -> Result<()> {
-    let mut stdout = stdout();
-
-    // Clear the screen
-    execute!(stdout, terminal::Clear(terminal::ClearType::All))?;
-
-    // Move the cursor to the top left
-    execute!(stdout, cursor::MoveTo(0, 0))?;
-
-    // Find the maximum row length
-    let max_width = map.iter().map(|row| row.len()).max().unwrap_or(0);
-
-    for (row, explored_row) in map.iter().zip(explored) {
-        let row_string: String = row.iter().collect();
-        let padded_row_string = format!("{:<width$}", row_string, width = max_width);
-
-        for (cell, &explored) in padded_row_string.chars().zip(explored_row) {
-            // Use green for explored cells and white for unexplored cells
-            let color = if explored { style::Color::Green } else { style::Color::White };
-
-            // Print the cell with the chosen color
-            execute!(stdout, style::SetForegroundColor(color))?;
-            write!(stdout, "{}", cell)?;
-            execute!(stdout, style::ResetColor)?;
-        }
-        writeln!(stdout)?;
+fn shoelace(vertices: &[(f64, f64)]) -> f64 {
+    let mut sum = 0.0;
+    for i in 0..vertices.len() {
+        let (x1, y1) = (vertices[i].0 - 0.5, vertices[i].1 - 0.5);
+        let (x2, y2) = (vertices[(i + 1) % vertices.len()].0 - 0.5, vertices[(i + 1) % vertices.len()].1 - 0.5);
+        sum += (y1 + y2) * (x2 - x1);
     }
-
-    Ok(())
+    0.5 * sum.abs()
 }
