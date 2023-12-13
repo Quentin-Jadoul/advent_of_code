@@ -11,6 +11,8 @@ mod day8;
 mod day9;
 mod day10;
 mod day11;
+mod day12;
+mod day13;
 
 mod input;
 
@@ -31,6 +33,8 @@ fn main() {
         Day::new("Day 9", day9::day9),
         Day::new("Day 10", day10::day10),
         Day::new("Day 11", day11::day11),
+        Day::new("Day 12", day12::day12),
+        Day::new("Day 13", day13::day13),
     ];
     for day in args.iter().skip(1) {
         match day.as_str() {
@@ -45,6 +49,8 @@ fn main() {
             "day9" => days[8].run(),
             "day10" => days[9].run(),
             "day11" => days[10].run(),
+            "day12" => days[11].run(),
+            "day13" => days[12].run(),
             _ => println!("Day not found"),
         }
     }
